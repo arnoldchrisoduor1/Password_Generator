@@ -2,6 +2,7 @@ import random
 import string
 import tkinter as tk
 from tkinter import messagebox
+import pandas as pd
 
 def generate_password(length=12, use_lowercase=True, use_uppercase=True, use_digits=True, use_special=True):
     characters = ''
@@ -20,11 +21,42 @@ def generate_password(length=12, use_lowercase=True, use_uppercase=True, use_dig
     password = ''.join(random.choice(characters) for _ in range(length))
     return password
 
+def save_to_excel(password, description):
+    data = {"Password": [password], "Description": [description]}
+    df = pd.DataFrame(data)
+    try:
+        with pd.ExcelWriter("liked_passwords.xlsx", engine="openpyxl", mode="a") as writer:
+            df.to_excel(writer, index=False, header=not writer.sheets)
+        messagebox.showinfo("Saved to Excel", "Password and description saved to 'liked_passwords.xlsx'")
+    except Exception as e:
+        messagebox.showerror("Error", f"An error occurred while saving to Excel: {e}")
+
+def create_table():
+    connection = sqlite3.connect("passwords.db")
+    cursor = connection.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS passwords (
+            id INTEGER PRIMARY KEY,
+            password TEXT NOT NULL,
+            description TEXT
+        )
+    """)
+    connection.commit()
+    connection.close()
+
+def insert_password(password, description):
+    connection = sqlite3.connect("passwords.db")
+    cursor = connection.cursor()
+    cursor.execute("INSERT INTO passwords (password, description) VALUES (?, ?)", (password, description))
+    connection.commit()
+    connection.close()
+
 class PasswordGeneratorApp(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Password Generator")
         self.geometry("400x250")
+        create_table()  # Create the database table if it doesn't exist
         self.create_widgets()
 
     def create_widgets(self):
@@ -60,7 +92,11 @@ class PasswordGeneratorApp(tk.Tk):
             password = generate_password(length, use_lowercase, use_uppercase, use_digits, use_special)
 
             if password:
-                messagebox.showinfo("Generated Password", f"Your password is: {password}")
+                description = tk.simpledialog.askstring("Description", "Enter a description for the account:")
+                if description is not None:
+                    insert_password(password, description)
+                    save_to_excel(password, description)
+                    messagebox.showinfo("Generated Password", f"Your password is: {password}\nDescription: {description}")
         except ValueError:
             messagebox.showerror("Error", "Invalid input. Please enter a valid number for the password length.")
 
