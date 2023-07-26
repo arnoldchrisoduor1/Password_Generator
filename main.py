@@ -4,8 +4,21 @@ import tkinter as tk
 from tkinter import messagebox
 
 def generate_password(length=12, use_lowercase=True, use_uppercase=True, use_digits=True, use_special=True):
-    # Password generation logic (same as previous code)
-    pass
+    characters = ''
+    if use_lowercase:
+        characters += string.ascii_lowercase
+    if use_uppercase:
+        characters += string.ascii_uppercase
+    if use_digits:
+        characters += string.digits
+    if use_special:
+        characters += string.punctuation
+
+    if not characters:
+        return None
+
+    password = ''.join(random.choice(characters) for _ in range(length))
+    return password
 
 class PasswordGeneratorApp(tk.Tk):
     def __init__(self):
