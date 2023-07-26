@@ -1,8 +1,12 @@
 import random
 import string
 import tkinter as tk
+import tkinter.simpledialog as simpledialog
 from tkinter import messagebox
 import pandas as pd
+import sqlite3
+import os
+
 
 def generate_password(length=12, use_lowercase=True, use_uppercase=True, use_digits=True, use_special=True):
     characters = ''
@@ -21,15 +25,30 @@ def generate_password(length=12, use_lowercase=True, use_uppercase=True, use_dig
     password = ''.join(random.choice(characters) for _ in range(length))
     return password
 
+
 def save_to_excel(password, description):
     data = {"Password": [password], "Description": [description]}
     df = pd.DataFrame(data)
-    try:
-        with pd.ExcelWriter("liked_passwords.xlsx", engine="openpyxl", mode="a") as writer:
-            df.to_excel(writer, index=False, header=not writer.sheets)
-        messagebox.showinfo("Saved to Excel", "Password and description saved to 'liked_passwords.xlsx'")
-    except Exception as e:
-        messagebox.showerror("Error", f"An error occurred while saving to Excel: {e}")
+
+    file_path = os.path.join(os.getcwd(), "liked_passwords.xlsx")
+
+    if not os.path.exists(file_path):
+        # If the file doesn't exist, create a new Excel file with the data
+        try:
+            with pd.ExcelWriter(file_path, engine="openpyxl") as writer:
+                df.to_excel(writer, index=False)
+            messagebox.showinfo("Saved to Excel", f"Password and description saved to '{file_path}'")
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred while saving to Excel: {e}")
+    else:
+        # If the file already exists, append the new data to it
+        try:
+            with pd.ExcelWriter(file_path, engine="openpyxl", mode="a") as writer:
+                df.to_excel(writer, index=False, header=not writer.sheets)
+            messagebox.showinfo("Saved to Excel", f"Password and description saved to '{file_path}'")
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred while saving to Excel: {e}")
+
 
 def create_table():
     connection = sqlite3.connect("passwords.db")
