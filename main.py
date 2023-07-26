@@ -26,28 +26,28 @@ def generate_password(length=12, use_lowercase=True, use_uppercase=True, use_dig
     return password
 
 
+import os
+
 def save_to_excel(password, description):
     data = {"Password": [password], "Description": [description]}
     df = pd.DataFrame(data)
 
     file_path = os.path.join(os.getcwd(), "liked_passwords.xlsx")
+    sheet_name = "Passwords"
 
-    if not os.path.exists(file_path):
-        # If the file doesn't exist, create a new Excel file with the data
-        try:
+    try:
+        if not os.path.exists(file_path):
+            # If the file doesn't exist, create a new Excel file with the data
             with pd.ExcelWriter(file_path, engine="openpyxl") as writer:
-                df.to_excel(writer, index=False)
+                df.to_excel(writer, index=False, sheet_name=sheet_name)
             messagebox.showinfo("Saved to Excel", f"Password and description saved to '{file_path}'")
-        except Exception as e:
-            messagebox.showerror("Error", f"An error occurred while saving to Excel: {e}")
-    else:
-        # If the file already exists, append the new data to it
-        try:
+        else:
+            # If the file already exists, append the new data to the existing sheet
             with pd.ExcelWriter(file_path, engine="openpyxl", mode="a") as writer:
-                df.to_excel(writer, index=False, header=not writer.sheets)
+                df.to_excel(writer, index=False, header=not writer.sheets, sheet_name=sheet_name)
             messagebox.showinfo("Saved to Excel", f"Password and description saved to '{file_path}'")
-        except Exception as e:
-            messagebox.showerror("Error", f"An error occurred while saving to Excel: {e}")
+    except Exception as e:
+        messagebox.showerror("Error", f"An error occurred while saving to Excel: {e}")
 
 
 def create_table():
