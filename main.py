@@ -1,11 +1,11 @@
 import random
 import string
 import tkinter as tk
+import tkinter.ttk as ttk
 import tkinter.simpledialog as simpledialog
 from tkinter import messagebox
-import pandas as pd
 import sqlite3
-import os
+import pyperclip
 
 
 def generate_password(length=12, use_lowercase=True, use_uppercase=True, use_digits=True, use_special=True):
@@ -26,30 +26,6 @@ def generate_password(length=12, use_lowercase=True, use_uppercase=True, use_dig
     return password
 
 
-import os
-
-def save_to_excel(password, description):
-    data = {"Password": [password], "Description": [description]}
-    df = pd.DataFrame(data)
-
-    file_path = os.path.join(os.getcwd(), "liked_passwords.xlsx")
-    sheet_name = "Passwords"
-
-    try:
-        if not os.path.exists(file_path):
-            # If the file doesn't exist, create a new Excel file with the data
-            with pd.ExcelWriter(file_path, engine="openpyxl") as writer:
-                df.to_excel(writer, index=False, sheet_name=sheet_name)
-            messagebox.showinfo("Saved to Excel", f"Password and description saved to '{file_path}'")
-        else:
-            # If the file already exists, append the new data to the existing sheet
-            with pd.ExcelWriter(file_path, engine="openpyxl", mode="a") as writer:
-                df.to_excel(writer, index=False, header=not writer.sheets, sheet_name=sheet_name)
-            messagebox.showinfo("Saved to Excel", f"Password and description saved to '{file_path}'")
-    except Exception as e:
-        messagebox.showerror("Error", f"An error occurred while saving to Excel: {e}")
-
-
 def create_table():
     connection = sqlite3.connect("passwords.db")
     cursor = connection.cursor()
@@ -63,12 +39,14 @@ def create_table():
     connection.commit()
     connection.close()
 
+
 def insert_password(password, description):
     connection = sqlite3.connect("passwords.db")
     cursor = connection.cursor()
     cursor.execute("INSERT INTO passwords (password, description) VALUES (?, ?)", (password, description))
     connection.commit()
     connection.close()
+
 
 class PasswordGeneratorApp(tk.Tk):
     def __init__(self):
@@ -79,11 +57,11 @@ class PasswordGeneratorApp(tk.Tk):
         self.create_widgets()
 
     def create_widgets(self):
-        tk.Label(self, text="Password Generator", font=("Helvetica", 20)).pack(pady=10)
+        ttk.Label(self, text="Password Generator", font=("Helvetica", 20)).pack(pady=10)
 
-        self.length_label = tk.Label(self, text="Password Length:")
+        self.length_label = ttk.Label(self, text="Password Length:")
         self.length_label.pack()
-        self.length_entry = tk.Entry(self)
+        self.length_entry = ttk.Entry(self)
         self.length_entry.insert(0, "12")  # Default password length
         self.length_entry.pack()
 
@@ -92,13 +70,17 @@ class PasswordGeneratorApp(tk.Tk):
         self.use_digits_var = tk.BooleanVar(value=True)
         self.use_special_var = tk.BooleanVar(value=True)
 
-        tk.Checkbutton(self, text="Include lowercase letters", variable=self.use_lowercase_var).pack(anchor="w")
-        tk.Checkbutton(self, text="Include uppercase letters", variable=self.use_uppercase_var).pack(anchor="w")
-        tk.Checkbutton(self, text="Include digits", variable=self.use_digits_var).pack(anchor="w")
-        tk.Checkbutton(self, text="Include special characters", variable=self.use_special_var).pack(anchor="w")
+        ttk.Checkbutton(self, text="Include lowercase letters", variable=self.use_lowercase_var).pack(anchor="w")
+        ttk.Checkbutton(self, text="Include uppercase letters", variable=self.use_uppercase_var).pack(anchor="w")
+        ttk.Checkbutton(self, text="Include digits", variable=self.use_digits_var).pack(anchor="w")
+        ttk.Checkbutton(self, text="Include special characters", variable=self.use_special_var).pack(anchor="w")
 
-        self.generate_button = tk.Button(self, text="Generate Password", command=self.generate_password)
+        self.generate_button = ttk.Button(self, text="Generate Password", command=self.generate_password)
         self.generate_button.pack(pady=20)
+
+        # Add a button to copy the generated password to the clipboard
+        self.copy_button = ttk.Button(self, text="Copy Password", command=self.copy_password, state=tk.DISABLED)
+        self.copy_button.pack(pady=10)
 
     def generate_password(self):
         try:
@@ -114,10 +96,16 @@ class PasswordGeneratorApp(tk.Tk):
                 description = tk.simpledialog.askstring("Description", "Enter a description for the account:")
                 if description is not None:
                     insert_password(password, description)
-                    save_to_excel(password, description)
+                    self.copy_button.configure(state=tk.NORMAL)  # Enable the copy button
                     messagebox.showinfo("Generated Password", f"Your password is: {password}\nDescription: {description}")
         except ValueError:
             messagebox.showerror("Error", "Invalid input. Please enter a valid number for the password length.")
+
+    def copy_password(self):
+        password = generate_password()  # Retrieve the generated password
+        pyperclip.copy(password)
+        messagebox.showinfo("Password Copied", "The generated password has been copied to the clipboard!")
+
 
 if __name__ == "__main__":
     app = PasswordGeneratorApp()
