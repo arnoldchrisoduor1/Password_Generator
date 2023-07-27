@@ -119,3 +119,5 @@ class PasswordGeneratorApp(tk.Tk):
 if __name__ == "__main__":
     app = PasswordGeneratorApp()
     app.mainloop()
+
+    
