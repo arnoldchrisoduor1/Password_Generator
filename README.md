@@ -1,6 +1,6 @@
-    PYTHON PASSWORD GENERATOR
+##PYTHON PASSWORD GENERATOR
 
-HOW TO USE IT.
+###HOW TO USE IT.
 
 1 . After unziping, find the main.exe in the dist folder.
 
@@ -11,4 +11,7 @@ HOW TO USE IT.
 
 Enjoy the App !!
 
-Made by : Digital Wilderness.
+Do not Save your password unprotected in your local machine.
+
+Made by : `Digital Wilderness.`
+Talk to me on Twitter `arnold0duor`
