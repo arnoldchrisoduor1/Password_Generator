@@ -52,7 +52,7 @@ class PasswordGeneratorApp(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Password Generator")
-        self.geometry("400x250")
+        self.geometry("600x400")  # Increased size of the GUI
         create_table()  # Create the database table if it doesn't exist
         self.create_widgets()
 
@@ -82,6 +82,10 @@ class PasswordGeneratorApp(tk.Tk):
         self.copy_button = ttk.Button(self, text="Copy Password", command=self.copy_password, state=tk.DISABLED)
         self.copy_button.pack(pady=10)
 
+        # Text box to display the generated password and description
+        self.password_textbox = tk.Text(self, height=5, wrap="word")
+        self.password_textbox.pack(pady=10, padx=5)
+
     def generate_password(self):
         try:
             length = int(self.length_entry.get())
@@ -97,12 +101,17 @@ class PasswordGeneratorApp(tk.Tk):
                 if description is not None:
                     insert_password(password, description)
                     self.copy_button.configure(state=tk.NORMAL)  # Enable the copy button
-                    messagebox.showinfo("Generated Password", f"Your password is: {password}\nDescription: {description}")
+                    # Clear the text box before displaying the new password and description
+                    self.password_textbox.delete(1.0, tk.END)
+                    # Insert the generated password and description into the text box
+                    self.password_textbox.insert(tk.END, f"Generated Password: {password}\nDescription: {description}")
         except ValueError:
             messagebox.showerror("Error", "Invalid input. Please enter a valid number for the password length.")
 
     def copy_password(self):
-        password = generate_password()  # Retrieve the generated password
+        # Retrieve the generated password from the text box instead of generating a new one
+        password_and_description = self.password_textbox.get(1.0, tk.END)
+        password = password_and_description.split("Generated Password: ")[-1].split("\n")[0]
         pyperclip.copy(password)
         messagebox.showinfo("Password Copied", "The generated password has been copied to the clipboard!")
 
